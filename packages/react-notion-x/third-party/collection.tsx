@@ -9,6 +9,7 @@ import { CollectionViewIcon } from '../icons/collection-view-icon';
 import CheckIcon from '../icons/check';
 import { ChevronDownIcon } from '../icons/chevron-down-icon';
 import { CollectionView } from './collection-view';
+import { CollectionViewTabs } from './collection-view-tabs';
 import { PropertyImplMemo } from './property';
 import { PageIcon } from '../components/page-icon';
 import { NotionContext, NotionContextProvider, useNotionContext } from '../context';
@@ -69,6 +70,11 @@ const CollectionViewBlock: React.FC<{
   const { recordMap, showCollectionViewDropdown } = useNotionContext();
   const { view_ids: viewIds } = block;
   const collectionId = getBlockCollectionId(block, recordMap);
+  const panelId = React.useId();
+  const availableViews = viewIds
+    .map(id => recordMap.collection_view[id]?.value)
+    .filter((view): view is types.CollectionView => !!view);
+  const hasViewTabs = block.type === 'collection_view_page' && availableViews.length > 1;
 
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => {
@@ -81,7 +87,7 @@ const CollectionViewBlock: React.FC<{
   });
 
   const collectionViewId =
-    (isMounted && viewIds.find(id => id === collectionState.collectionViewId)) ||
+    (isMounted && viewIds.find(id => id === collectionState?.collectionViewId)) ||
     defaultCollectionViewId;
 
   const onChangeView = React.useCallback(
@@ -161,41 +167,71 @@ const CollectionViewBlock: React.FC<{
   }
 
   const title = getTextContent(collection.name).trim();
-  if (collection.icon) {
-    block.format = {
-      ...block.format,
-      page_icon: collection.icon,
-    };
-  }
 
   return (
-    <div className={cs('notion-collection', className)}>
-      <div className="notion-collection-header" style={style}>
-        {title && (
-          <div className="notion-collection-header-title">
-            <PageIcon block={block} className="notion-page-title-icon" hideDefaultIcon />
+    <div
+      className={cs(
+        'notion-collection',
+        className,
+        hasViewTabs && 'notion-collection-tabbed',
+        hasViewTabs && collectionView.type === 'list' && 'notion-collection-list',
+      )}
+    >
+      {!hasViewTabs && (
+        <div className="notion-collection-header" style={style}>
+          {title && (
+            <div className="notion-collection-header-title">
+              <PageIcon block={block} className="notion-page-title-icon" hideDefaultIcon />
 
-            {title}
-          </div>
-        )}
+              {title}
+            </div>
+          )}
 
-        {viewIds.length > 1 && showCollectionViewDropdown && (
-          <CollectionViewDropdownMenu
-            collectionView={collectionView}
-            collectionViewId={collectionViewId}
-            viewIds={viewIds}
-            onChangeView={onChangeView}
+          {viewIds.length > 1 && showCollectionViewDropdown && (
+            <CollectionViewDropdownMenu
+              collectionView={collectionView}
+              collectionViewId={collectionViewId}
+              viewIds={viewIds}
+              onChangeView={onChangeView}
+            />
+          )}
+        </div>
+      )}
+
+      {hasViewTabs ? (
+        <>
+          <CollectionViewTabs
+            views={availableViews}
+            selectedViewId={collectionViewId}
+            title={title}
+            panelId={panelId}
+            onChange={onChangeView}
           />
-        )}
-      </div>
-
-      <CollectionView
-        collection={collection}
-        collectionView={collectionView}
-        collectionData={collectionData}
-        padding={padding}
-        width={width}
-      />
+          <div
+            id={panelId}
+            role="tabpanel"
+            aria-labelledby={`${panelId}-${collectionViewId}`}
+            tabIndex={0}
+            className="notion-collection-view-panel"
+          >
+            <CollectionView
+              collection={collection}
+              collectionView={collectionView}
+              collectionData={collectionData}
+              padding={padding}
+              width={width}
+            />
+          </div>
+        </>
+      ) : (
+        <CollectionView
+          collection={collection}
+          collectionView={collectionView}
+          collectionData={collectionData}
+          padding={padding}
+          width={width}
+        />
+      )}
     </div>
   );
 };

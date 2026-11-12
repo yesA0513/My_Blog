@@ -6,6 +6,7 @@ import * as React from 'react';
 import BodyClassName from 'react-body-classname';
 // core notion renderer
 import { NotionRenderer } from 'react-notion-x';
+import { PageIcon } from 'react-notion-x/components/page-icon';
 import TweetEmbed from 'react-tweet-embed';
 import { useSearchParam } from 'react-use';
 
@@ -225,7 +226,10 @@ export const NotionPage: React.FC<types.PageProps> = ({
 
   const isIndexPage = pageId === site.rootNotionPageId;
 
-  const hasCollectionView = Object.keys(recordMap.collection_query).length;
+  const isListCollectionPage =
+    block.type === 'collection_view_page' &&
+    block.view_ids?.every(id => recordMap.collection_view[id]?.value?.type === 'list');
+  const hasCollectionView = !isListCollectionPage && Object.keys(recordMap.collection_query).length;
 
   return (
     <>
@@ -241,7 +245,19 @@ export const NotionPage: React.FC<types.PageProps> = ({
 
       <NotionRenderer
         className={cs(isIndexPage ? 'indexPage' : 'childPage', { hasCollectionView })}
-        bodyClassName={cs(styles.notion, isIndexPage && 'index-page')}
+        bodyClassName={cs(
+          styles.notion,
+          isIndexPage && 'index-page',
+          isListCollectionPage && 'memo-list-page',
+        )}
+        pageTitle={
+          isListCollectionPage ? (
+            <>
+              <PageIcon block={block} hideDefaultIcon />
+              {title}
+            </>
+          ) : undefined
+        }
         darkMode={isDarkMode}
         components={components}
         recordMap={recordMap}

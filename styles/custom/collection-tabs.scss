@@ -1,0 +1,140 @@
+.notion-collection-tabbed {
+  min-width: 0;
+  width: 100%;
+
+  .notion-collection-tabs {
+    display: flex;
+    gap: 4px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 4px 2px;
+    margin-bottom: 8px;
+    scrollbar-width: none;
+  }
+
+  .notion-collection-tab {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--fg-color-3);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 20px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover,
+    &[aria-selected='true'] {
+      background: var(--fg-color-0);
+      color: var(--fg-color);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 1px;
+    }
+  }
+
+  .notion-collection-tab-icon {
+    display: block;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    fill: currentColor;
+  }
+
+  .notion-collection-view-panel {
+    width: 100%;
+    min-height: 120px;
+
+    &:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.notion-collection-list {
+  .notion-list-body {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .notion-list-item {
+    width: 100%;
+    min-height: 32px;
+    margin: 0;
+    padding: 4px 8px;
+    border-bottom: 0;
+    border-radius: 4px;
+    color: var(--fg-color);
+    font-size: 14px;
+
+    &:hover {
+      background: var(--fg-color-0);
+    }
+  }
+
+  .notion-list-item-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 400;
+  }
+
+  .notion-list-item-body {
+    flex: 0 1 auto;
+    max-width: 45%;
+  }
+
+  .notion-collection-empty {
+    padding: 8px;
+    color: var(--fg-color-3);
+    font-size: 14px;
+  }
+}
+
+.dark-mode .notion-collection-tab-icon {
+  filter: brightness(1.5);
+}
+
+.memo-list-page {
+  .notion-page-icon-hero {
+    display: none;
+  }
+
+  .notion-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 32px;
+    line-height: 1.25;
+
+    .notion-page-icon-inline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 32px;
+      width: 32px;
+      height: 32px;
+      max-width: 32px;
+      max-height: 32px;
+      margin: 0;
+      line-height: 32px;
+    }
+
+    .notion-page-icon {
+      display: block;
+      width: 32px;
+      height: 32px;
+      font-size: 28px;
+      line-height: 32px;
+    }
+  }
+}

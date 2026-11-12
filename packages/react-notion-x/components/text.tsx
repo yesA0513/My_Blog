@@ -5,7 +5,7 @@ import { parsePageId } from 'notion-utils';
 import { useNotionContext } from '../context';
 import { getHashFragmentValue } from '../utils';
 import { PageTitle } from './page-title';
-import { GracefulImage } from './graceful-image';
+import { UserAvatar } from './user-avatar';
 import { EOI } from './eoi';
 import { format } from 'date-fns-tz';
 import { dateformat } from '~/lib/config';
@@ -25,7 +25,7 @@ export const Text: React.FC<{
   linkProtocol?: string;
   inline?: boolean; // TODO: currently unused
 }> = ({ value, block, linkProps, linkProtocol }) => {
-  const { components, recordMap, mapPageUrl, mapImageUrl, rootDomain } = useNotionContext();
+  const { components, recordMap, mapPageUrl, rootDomain } = useNotionContext();
 
   return (
     <React.Fragment>
@@ -79,10 +79,11 @@ export const Text: React.FC<{
 
                   return (
                     <div className="notion-user-container">
-                      <GracefulImage
-                        className="notion-user"
-                        src={mapImageUrl(user.profile_photo, block)}
-                        alt={name}
+                      <UserAvatar
+                        userId={id}
+                        name={name}
+                        photoUrl={user.profile_photo}
+                        block={block}
                       />
                       <span className="notion-user-name">{name}</span>
                     </div>
@@ -204,10 +205,11 @@ export const Text: React.FC<{
 
               return (
                 <div className="notion-user-container">
-                  <GracefulImage
-                    className="notion-user"
-                    src={mapImageUrl(user.profile_photo, block)}
-                    alt={name}
+                  <UserAvatar
+                    userId={userId}
+                    name={name}
+                    photoUrl={user.profile_photo}
+                    block={block}
                   />
                   <span className="notion-user-name">{name}</span>
                 </div>
