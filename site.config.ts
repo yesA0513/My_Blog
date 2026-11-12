@@ -8,6 +8,10 @@ export default siteConfig({
 
   name: process.env.NEXT_PUBLIC_SITE_NAME || '나의 블로그',
   author: process.env.NEXT_PUBLIC_SITE_AUTHOR || '블로그 작성자',
+  // Optional avatar images keyed by the author's Notion user ID.
+  authorAvatarOverrides: {
+    '92a3d7c9-7af3-4c01-a247-c410b1ebb510': '/author-avatar.png',
+  },
   domain: process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost:3000',
   description: '노션으로 작성하는 블로그',
   language: 'ko',

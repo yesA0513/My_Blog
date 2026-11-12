@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { Router, useRouter } from 'next/router';
 
 import cs from 'classnames';
+import { LoadingIcon } from '../LoadingIcon';
 
 const PageLoading = () => {
   const { isFallback } = useRouter();
@@ -30,8 +31,14 @@ const PageLoading = () => {
   }, []);
 
   return (
-    <div className={cs('PageLoading', (isFallback || loading) && 'visible')}>
-      <div className="icon"></div>
+    <div
+      className={cs('PageLoading', (isFallback || loading) && 'visible')}
+      aria-hidden={!(isFallback || loading)}
+    >
+      <div className="PageLoading-content" role="status" aria-live="polite">
+        <LoadingIcon />
+        <span>불러오는 중…</span>
+      </div>
     </div>
   );
 };
