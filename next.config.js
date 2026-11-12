@@ -4,6 +4,12 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 module.exports = withBundleAnalyzer({
+  env: {
+    NEXT_PUBLIC_SITE_DOMAIN:
+      process.env.NEXT_PUBLIC_SITE_DOMAIN ||
+      process.env.VERCEL_PROJECT_PRODUCTION_URL ||
+      'localhost:3000',
+  },
   staticPageGenerationTimeout: 300,
   images: {
     remotePatterns: [

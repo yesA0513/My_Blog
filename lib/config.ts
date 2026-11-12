@@ -16,7 +16,9 @@ export const rootNotionPageId: string = parsePageId(getSiteConfig('rootNotionPag
 });
 
 if (!rootNotionPageId) {
-  throw new Error('Config error invalid "rootNotionPageId"');
+  throw new Error(
+    'Set NEXT_PUBLIC_NOTION_PAGE_ID to your public Notion page ID or URL. See docs/SETUP.ko.md.',
+  );
 }
 
 // if you want to restrict pages to a single notion workspace (optional)
@@ -63,6 +65,8 @@ export const isPreviewImageSupportEnabled: boolean = getSiteConfig(
   'isPreviewImageSupportEnabled',
   false,
 );
+
+export const isSocialImageEnabled: boolean = getSiteConfig('isSocialImageEnabled', false);
 
 // Optional whether or not to include the Notion ID in page URLs or just use slugs
 export const includeNotionIdInUrls: boolean = getSiteConfig('includeNotionIdInUrls', !!isDev);

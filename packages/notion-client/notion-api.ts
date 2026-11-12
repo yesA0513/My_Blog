@@ -5,6 +5,7 @@ import { parsePageId, getPageContentBlockIds, uuidToId, getBlockCollectionId } f
 import pMap from 'p-map';
 
 import * as types from './types';
+import { normalizeRecordMap } from './normalize-record-map';
 
 /**
  * Main Notion API client.
@@ -67,16 +68,19 @@ export class NotionAPI {
       throw new Error(`Notion page not found "${uuidToId(pageId)}"`);
     }
 
-    // CUSTOM: 작성자 유저 정보 가져오도록 처리
+    // Public pages may omit the author's identity. Content must still load.
+    recordMap.notion_user = recordMap.notion_user ?? {};
     const pageBlockId = Object.keys(recordMap.block)[0];
-    const pageBlock = recordMap.block[pageBlockId].value;
-    const authorId = pageBlock.created_by_id;
-    const users = await this.getUsers([authorId]);
-    const author = users.results[0];
-
-    recordMap.notion_user = {
-      [authorId]: author,
-    };
+    const authorId = recordMap.block[pageBlockId]?.value?.created_by_id;
+    if (authorId && !recordMap.notion_user[authorId]) {
+      try {
+        const users = await this.getUsers([authorId], gotOptions);
+        const author = users.results?.[0];
+        if (author?.value) recordMap.notion_user[authorId] = author;
+      } catch (error) {
+        console.warn('Notion author lookup skipped:', error.message);
+      }
+    }
 
     // ensure that all top-level maps exist
     recordMap.collection = recordMap.collection ?? {};
@@ -120,14 +124,14 @@ export class NotionAPI {
         collectionId: string;
         collectionViewId: string;
       }> = contentBlockIds.flatMap(blockId => {
-        const block = recordMap.block[blockId].value;
+        const block = recordMap.block[blockId]?.value;
         const collectionId =
           block &&
           (block.type === 'collection_view' || block.type === 'collection_view_page') &&
           getBlockCollectionId(block, recordMap);
 
         if (collectionId) {
-          return block.view_ids?.map(collectionViewId => ({
+          return (block.view_ids || []).map(collectionViewId => ({
             collectionId,
             collectionViewId,
           }));
@@ -580,7 +584,7 @@ export class NotionAPI {
 
     const url = `${this._apiBaseUrl}/${endpoint}`;
 
-    return got
+    const result = await got
       .post(url, {
         ...gotOptions,
         retry: {
@@ -590,6 +594,11 @@ export class NotionAPI {
         json: body,
         headers,
       })
-      .json();
+      .json<T>();
+
+    const recordMap = (result as any)?.recordMap;
+    if (recordMap) normalizeRecordMap(recordMap);
+
+    return result;
   }
 }
