@@ -31,6 +31,8 @@ export default siteConfig({
 
   dateformat: 'yyyy년 MM월 dd일',
   hiddenPostProperties: ['설명', '상태', '최하위 정렬'],
+  // Keep Memo's unfiltered All view in Notion, but omit it from the blog.
+  hiddenCollectionViewIds: ['41722acc-6a48-80d2-b856-000c4b07304f'],
   contentPositionTextAlign: 'left',
   defaultTheme: 'system',
   enableComment: false,

@@ -38,6 +38,7 @@ export interface SiteConfig {
   // custom configs (2skydev)
   dateformat: string;
   hiddenPostProperties: string[];
+  hiddenCollectionViewIds?: string[];
   defaultTheme: 'light' | 'dark' | 'system';
   enableComment: boolean;
   contentPositionTextAlign: 'left' | 'right';

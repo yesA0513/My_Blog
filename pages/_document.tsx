@@ -14,10 +14,12 @@ export default class MyDocument extends Document {
 
           <link rel="manifest" href="/manifest.json" />
 
-          <link href="/fonts/SpoqaHanSansNeo/index.css" rel="stylesheet" />
-
           <link rel="preconnect" href="https://cdn.jsdelivr.net" />
           <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
+          <link
+            href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+            rel="stylesheet"
+          />
           <link
             href="https://cdn.jsdelivr.net/gh/toss/tossface/dist/tossface.css"
             rel="stylesheet"

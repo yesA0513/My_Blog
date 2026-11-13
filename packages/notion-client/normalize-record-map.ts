@@ -19,5 +19,22 @@ export function normalizeRecordMap(recordMap: RecordMap): RecordMap {
     }
   }
 
+  // Feed views use reducers this renderer does not support. Show their filtered
+  // results as a plain list, preserving the name, icon, properties, and filters.
+  for (const entry of Object.values(recordMap.collection_view || {})) {
+    const view = entry?.value as any;
+    if (view?.type !== 'feed') continue;
+
+    entry.value = {
+      ...view,
+      type: 'list',
+      format: {
+        ...view.format,
+        board_columns_by: undefined,
+        collection_group_by: undefined,
+      },
+    };
+  }
+
   return recordMap;
 }

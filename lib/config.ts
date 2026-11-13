@@ -183,6 +183,7 @@ function invertPageUrlOverrides(pageUrlOverrides: PageUrlOverridesMap): PageUrlO
 
 export const dateformat: string = getSiteConfig('dateformat', 'yyyy.MM.dd');
 export const hiddenPostProperties: string[] = getSiteConfig('hiddenPostProperties', []);
+export const hiddenCollectionViewIds: string[] = getSiteConfig('hiddenCollectionViewIds', []);
 export const defaultTheme: SiteConfig['defaultTheme'] = getSiteConfig('defaultTheme', 'system');
 export const contentPositionTextAlign: SiteConfig['contentPositionTextAlign'] = getSiteConfig(
   'contentPositionTextAlign',
