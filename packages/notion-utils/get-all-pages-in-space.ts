@@ -78,38 +78,36 @@ export async function getAllPagesInSpace(
                 }
               }
 
-              // CUSTOM: 데이터베이스의 보기는 첫번째것만 표시되므로 사이트맵 추출도 첫번째것만 추출 (필터링된 글은 추출이 안되도록 처리)
+              // Only crawl collection items included in the views displayed on the blog.
               Object.values(page.block).forEach(({ value: block }) => {
                 if (!block || !block?.type) {
                   return;
                 }
 
-                if (block.type === 'collection_view') {
-                  const defaultViewId = block.view_ids[0];
-
-                  const collectionId =
-                    block.collection_id ||
-                    page?.collection_view?.[defaultViewId]?.value?.format?.collection_pointer?.id;
-
-                  const collectionChildPageIds =
-                    page.collection_query?.[collectionId]?.[defaultViewId]?.collection_group_results
-                      ?.blockIds || [];
-
-                  // console.log('--');
-                  // console.log('block:', block);
-                  // console.log('collectionId: ', collectionId);
-                  // console.log('block.view_ids: ', block.view_ids);
-                  // console.log('page.collection_query: ', page.collection_query);
-                  // console.log(
-                  //   'page.collection_query.find: ',
-                  //   page.collection_query?.[collectionId]?.[defaultViewId]?.collection_group_results,
-                  // );
-                  // console.log('collectionView', page.collection_view[defaultViewId].value);
-                  // console.log('collectionChildPageIds', collectionChildPageIds);
-
-                  collectionChildPageIds.forEach(blockId => {
-                    allowCollectionItemIds.add(blockId);
-                  });
+                if (
+                  traverseCollections &&
+                  (block.type === 'collection_view' || block.type === 'collection_view_page')
+                ) {
+                  // Inline galleries display the first view. Full-page databases
+                  // display every visible tab; hidden All views are already removed.
+                  const viewIds =
+                    block.type === 'collection_view_page'
+                      ? block.view_ids || []
+                      : (block.view_ids || []).slice(0, 1);
+                  for (const viewId of viewIds) {
+                    const collectionId =
+                      block.collection_id ||
+                      page.collection_view?.[viewId]?.value?.format?.collection_pointer?.id;
+                    const data = page.collection_query?.[collectionId]?.[viewId];
+                    if (!data) continue;
+                    const groups: any[] = [data.collection_group_results, data];
+                    for (const [key, result] of Object.entries(data)) {
+                      if (key.startsWith('results:')) groups.push(result);
+                    }
+                    for (const group of groups) {
+                      for (const id of group?.blockIds || []) allowCollectionItemIds.add(id);
+                    }
+                  }
                 }
               });
 
@@ -129,7 +127,7 @@ export async function getAllPagesInSpace(
                     return false;
                   }
 
-                  // CUSTOM: 데이터베이스의 보기는 첫번째것만 표시되므로 사이트맵 추출도 첫번째것만 추출 (필터링된 글은 추출이 안되도록 처리)
+                  // Metadata from unfiltered views must not make drafts discoverable.
                   if (block.parent_table === 'collection') {
                     if (!allowCollectionItemIds.has(block.id)) {
                       return false;

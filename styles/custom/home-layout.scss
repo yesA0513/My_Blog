@@ -1,0 +1,39 @@
+.indexPage {
+  .index-page.notion-page-no-cover {
+    margin-top: calc(var(--notion-header-height) + 24px) !important;
+    padding-top: 0;
+  }
+
+  .notion-page-icon-hero {
+    display: none;
+  }
+
+  .notion-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 40px;
+    margin-bottom: 20px;
+    font-size: 32px;
+
+    .notion-page-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      max-width: 40px;
+      max-height: 40px;
+      font-size: 40px;
+      line-height: 1;
+    }
+  }
+
+  // The home page starts with two empty Notion text blocks before Posts.
+  .notion-page-content-inner > .notion-blank:first-child,
+  .notion-page-content-inner > .notion-blank:first-child + .notion-blank {
+    display: none;
+  }
+}

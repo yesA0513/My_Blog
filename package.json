@@ -40,6 +40,7 @@
     "test": "run-p test:*",
     "test:lint": "eslint '**/*.{ts,tsx}'",
     "test:notion": "tsx --test tests/notion-api.test.ts",
+    "test:blog": "tsx --test tests/blog.test.ts",
     "test:prettier": "prettier '**/*.{js,jsx,ts,tsx}' --check"
   },
   "workspaces": [

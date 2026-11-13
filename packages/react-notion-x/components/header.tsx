@@ -101,7 +101,7 @@ export const Search: React.FC<{
     event.stopPropagation();
   });
 
-  useHotkeys('cmd+k', event => {
+  useHotkeys('cmd+k,ctrl+k', event => {
     onOpenSearch();
     event.preventDefault();
     event.stopPropagation();
@@ -112,15 +112,16 @@ export const Search: React.FC<{
   return (
     <>
       {hasSearch && (
-        <div
-          role="button"
+        <button
+          type="button"
+          aria-label="검색"
           className={cs('breadcrumb', 'button', 'notion-search-button')}
           onClick={onOpenSearch}
         >
           <SearchIcon className="searchIcon" />
 
           {title && <span className="title">{title}</span>}
-        </div>
+        </button>
       )}
 
       {isSearchOpen && hasSearch && (

@@ -1,12 +1,14 @@
 import * as React from 'react';
 import cs from 'classnames';
 import { IoSunnyOutline, IoMoonSharp } from 'react-icons/io5';
-import { Header, Breadcrumbs, Search, useNotionContext } from 'react-notion-x';
+import { Breadcrumbs, Search, useNotionContext } from 'react-notion-x';
 import * as types from 'notion-types';
 
 import { useDarkMode } from 'lib/use-dark-mode';
-import { navigationStyle, navigationLinks, isSearchEnabled } from 'lib/config';
+import { navigationStyle, navigationLinks, isSearchEnabled, rootNotionPageId } from 'lib/config';
+import { uuidToId } from 'notion-utils';
 
+import { BackButton } from './BackButton';
 import styles from './styles.module.css';
 
 export const ToggleThemeButton = () => {
@@ -35,15 +37,28 @@ export const NotionPageHeader: React.FC<{
   block: types.CollectionViewPageBlock | types.PageBlock;
 }> = ({ block }) => {
   const { components, mapPageUrl } = useNotionContext();
+  const breadcrumbs = (
+    <div className="blog-header-left">
+      {uuidToId(block.id) !== rootNotionPageId && <BackButton />}
+      <Breadcrumbs block={block} />
+    </div>
+  );
 
   if (navigationStyle === 'default') {
-    return <Header block={block} />;
+    return (
+      <header className="notion-header">
+        <div className="notion-nav-header">
+          {breadcrumbs}
+          {isSearchEnabled && <Search block={block} title="검색" />}
+        </div>
+      </header>
+    );
   }
 
   return (
     <header className="notion-header">
       <div className="notion-nav-header">
-        <Breadcrumbs block={block} />
+        {breadcrumbs}
 
         <div className="notion-nav-header-rhs breadcrumbs">
           {navigationLinks
