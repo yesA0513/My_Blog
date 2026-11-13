@@ -87,7 +87,9 @@ export const Search: React.FC<{
   const onSearchNotion = search || searchNotion;
 
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const [hasOpenedSearch, setHasOpenedSearch] = React.useState(false);
   const onOpenSearch = React.useCallback(() => {
+    setHasOpenedSearch(true);
     setIsSearchOpen(true);
   }, []);
 
@@ -124,7 +126,7 @@ export const Search: React.FC<{
         </button>
       )}
 
-      {isSearchOpen && hasSearch && (
+      {hasOpenedSearch && hasSearch && (
         <SearchDialog
           isOpen={isSearchOpen}
           rootBlockId={rootPageId || block?.id}

@@ -9,6 +9,7 @@ export const BackButton = () => {
     <button
       type="button"
       className="blog-back-button"
+      aria-label="뒤로가기"
       title="이전 페이지로 돌아가기"
       onClick={() => {
         if (blogNavigationHistory.hasPrevious(window.history.state?.key)) router.back();
@@ -16,7 +17,6 @@ export const BackButton = () => {
       }}
     >
       <IoArrowBackOutline aria-hidden="true" />
-      <span>뒤로가기</span>
     </button>
   );
 };

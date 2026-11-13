@@ -15,28 +15,40 @@
 .blog-back-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  gap: 5px;
-  padding: 6px 8px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: 10px;
   background: transparent;
   color: inherit;
   font: inherit;
   font-size: 14px;
   cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease;
 
   svg {
     width: 16px;
     height: 16px;
+    transition: transform 160ms ease;
   }
 
   &:hover {
     background: var(--bg-color-0);
+
+    svg {
+      transform: translateX(-2px);
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--fg-color-3);
+    outline: 2px solid var(--primary-color);
     outline-offset: 2px;
   }
 }
@@ -52,4 +64,21 @@
 
 .notion-header .notion-search-button {
   flex-shrink: 0;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  transition: background-color 160ms ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-back-button,
+  .blog-back-button svg {
+    transition: none;
+    transform: none !important;
+  }
 }

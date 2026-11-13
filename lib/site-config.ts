@@ -5,6 +5,7 @@ export interface SiteConfig {
   rootNotionSpaceId?: string;
 
   name: string;
+  homePageTitle?: string;
   domain: string;
   author: string;
   authorAvatarOverrides?: Record<string, string>;

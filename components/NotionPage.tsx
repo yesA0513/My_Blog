@@ -88,7 +88,7 @@ const Pdf = dynamic(() => import('react-notion-x/third-party/pdf').then(m => m.P
 const Modal = dynamic(
   () =>
     import('react-notion-x/third-party/modal').then(m => {
-      m.Modal.setAppElement('.notion-viewport');
+      m.Modal.setAppElement('#__next');
       return m.Modal;
     }),
   {
@@ -254,7 +254,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
           isListCollectionPage || isIndexPage ? (
             <>
               <PageIcon block={block} hideDefaultIcon />
-              {title}
+              {isIndexPage ? config.homePageTitle || title : title}
             </>
           ) : undefined
         }

@@ -7,6 +7,7 @@ export default siteConfig({
   rootNotionSpaceId: null,
 
   name: process.env.NEXT_PUBLIC_SITE_NAME || '나의 블로그',
+  homePageTitle: '일상과 개발의 기록',
   author: process.env.NEXT_PUBLIC_SITE_AUTHOR || '블로그 작성자',
   // Optional avatar images keyed by the author's Notion user ID.
   authorAvatarOverrides: {

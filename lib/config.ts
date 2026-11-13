@@ -42,6 +42,7 @@ export const isDev = environment === 'development';
 
 // general site config
 export const name: string = getSiteConfig('name');
+export const homePageTitle: string | null = getSiteConfig('homePageTitle', null);
 export const author: string = getSiteConfig('author');
 export const authorAvatarOverrides: Record<string, string> = getSiteConfig(
   'authorAvatarOverrides',
