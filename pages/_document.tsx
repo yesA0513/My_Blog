@@ -9,10 +9,11 @@ export default class MyDocument extends Document {
     return (
       <Html lang="ko">
         <Head>
-          <link rel="shortcut icon" href="/favicon.ico" />
-          <link rel="icon" type="image/png" sizes="128x128" href="favicon.png" />
-
-          <link rel="manifest" href="/manifest.json" />
+          <link
+            rel="icon"
+            type="image/svg+xml"
+            href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E"
+          />
 
           <link rel="preconnect" href="https://cdn.jsdelivr.net" />
           <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />

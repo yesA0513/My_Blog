@@ -15,12 +15,20 @@ import { SWRConfig, SWRConfiguration } from 'swr';
 import PageLoading from '~/components/PageLoading';
 import { bootstrap } from '~/lib/bootstrap-client';
 import { posthogConfig, posthogId } from '~/lib/config';
+import { blogNavigationHistory } from '~/lib/navigation-history';
 import '~/styles/custom/index.scss';
 
 const Bootstrap = () => {
   const [preferences, setPreferences] = useRecoilState(preferencesStore);
 
   const router = useRouter();
+
+  useEffect(() => {
+    const recordNavigation = () => blogNavigationHistory.visit(window.history.state?.key);
+    recordNavigation();
+    router.events.on('routeChangeComplete', recordNavigation);
+    return () => router.events.off('routeChangeComplete', recordNavigation);
+  }, [router.events]);
 
   // posthog
   useEffect(() => {

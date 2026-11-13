@@ -251,7 +251,7 @@ export const NotionPage: React.FC<types.PageProps> = ({
           isListCollectionPage && 'memo-list-page',
         )}
         pageTitle={
-          isListCollectionPage ? (
+          isListCollectionPage || isIndexPage ? (
             <>
               <PageIcon block={block} hideDefaultIcon />
               {title}
