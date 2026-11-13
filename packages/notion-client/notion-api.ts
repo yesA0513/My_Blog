@@ -15,23 +15,27 @@ export class NotionAPI {
   private readonly _authToken?: string;
   private readonly _activeUser?: string;
   private readonly _userTimeZone: string;
+  private readonly _hiddenCollectionViewIds: Set<string>;
 
   constructor({
     apiBaseUrl = 'https://www.notion.so/api/v3',
     authToken,
     activeUser,
     userTimeZone = 'America/New_York',
+    hiddenCollectionViewIds = [],
   }: {
     apiBaseUrl?: string;
     authToken?: string;
     userLocale?: string;
     userTimeZone?: string;
     activeUser?: string;
+    hiddenCollectionViewIds?: string[];
   } = {}) {
     this._apiBaseUrl = apiBaseUrl;
     this._authToken = authToken;
     this._activeUser = activeUser;
     this._userTimeZone = userTimeZone;
+    this._hiddenCollectionViewIds = new Set(hiddenCollectionViewIds);
   }
 
   public async getPage(
@@ -131,10 +135,9 @@ export class NotionAPI {
           getBlockCollectionId(block, recordMap);
 
         if (collectionId) {
-          return (block.view_ids || []).map(collectionViewId => ({
-            collectionId,
-            collectionViewId,
-          }));
+          return (block.view_ids || [])
+            .filter(id => !this._hiddenCollectionViewIds.has(id))
+            .map(collectionViewId => ({ collectionId, collectionViewId }));
         } else {
           return [];
         }
@@ -198,6 +201,16 @@ export class NotionAPI {
           concurrency,
         },
       );
+    }
+
+    // Query responses can include the database block again. Remove hidden views
+    // after merging so a saved browser selection cannot restore them either.
+    for (const { value: block } of Object.values(recordMap.block)) {
+      if (block?.type === 'collection_view' || block?.type === 'collection_view_page') {
+        block.view_ids = (block.view_ids || []).filter(
+          id => !this._hiddenCollectionViewIds.has(id),
+        );
+      }
     }
 
     // Optionally fetch signed URLs for any embedded files.
@@ -338,8 +351,25 @@ export class NotionAPI {
   ) {
     const type = collectionView?.type;
     const isBoardType = type === 'board';
-    const groupBy =
-      collectionView?.format?.board_columns_by || collectionView?.format?.collection_group_by;
+    const groupBy = isBoardType
+      ? collectionView?.format?.board_columns_by
+      : collectionView?.format?.collection_group_by;
+
+    const withoutDraftStatusFilters = (filter: any): any => {
+      if (!filter || (draftView && filter.filter?.operator === 'status_is')) return undefined;
+      if (!filter.filters) return filter;
+
+      const filters = filter.filters.map(withoutDraftStatusFilters).filter(Boolean);
+      return filters.length ? { ...filter, filters } : undefined;
+    };
+    const filters = [
+      collectionView?.query2?.filter,
+      ...(collectionView?.format?.property_filters || []).map(filter => filter.filter),
+    ]
+      .map(withoutDraftStatusFilters)
+      .filter(Boolean);
+    // Notion stores advanced filters and property filters separately. Both apply.
+    const filter = filters.length ? { operator: 'and', filters } : undefined;
 
     let loader: any = {
       type: 'reducer',
@@ -352,23 +382,16 @@ export class NotionAPI {
       },
       sort: [],
       ...collectionView?.query2,
+      filter,
       searchQuery,
       userTimeZone,
     };
 
-    // CUSTOM: 필터 작동하도록 처리
-    if (collectionView?.format?.property_filters?.length) {
-      loader.filter = {
-        operator: 'and',
-        filters: collectionView.format.property_filters
-          .map(filter => filter.filter)
-          .filter(draftView ? filter => filter.filter.operator !== 'status_is' : () => true),
-      };
-    }
-
     if (groupBy) {
       const groups =
-        collectionView?.format?.board_columns || collectionView?.format?.collection_groups || [];
+        (isBoardType
+          ? collectionView?.format?.board_columns
+          : collectionView?.format?.collection_groups) || [];
       const iterators = [isBoardType ? 'board' : 'group_aggregation', 'results'];
       const operators = {
         checkbox: 'checkbox_is',
@@ -442,22 +465,16 @@ export class NotionAPI {
           [reducerLabel]: {
             type: 'groups',
             groupBy,
-            ...(collectionView?.query2?.filter && {
-              filter: collectionView?.query2?.filter,
-            }),
+            filter,
             groupSortPreference: groups.map(group => group?.value),
             limit,
           },
           ...reducersQuery,
         },
         ...collectionView?.query2,
+        filter,
         searchQuery,
         userTimeZone,
-        //TODO: add filters here
-        // filter: {
-        //   filters: filters,
-        //   operator: 'and'
-        // }
       };
     }
 
