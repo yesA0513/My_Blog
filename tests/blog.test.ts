@@ -193,6 +193,20 @@ test('an unavailable root is a search failure instead of an empty successful res
   await assert.rejects(search('test'), /Unable to load/);
 });
 
+test('shares a single index build when warmup and query overlap', async () => {
+  const { search, fetched } = fixture();
+  const [, title, body] = await Promise.all([search(''), search('Nemesis'), search('carplay')]);
+  assert.deepEqual(
+    title.results.map(hit => hit.id),
+    [daily],
+  );
+  assert.deepEqual(
+    body.results.map(hit => hit.id),
+    [daily],
+  );
+  assert.equal(fetched.filter(pageId => pageId === root).length, 1);
+});
+
 test('back navigation stays inside the blog after pushes, replaces, and browser back/forward', () => {
   const history = createNavigationHistory();
   history.visit('direct-entry');

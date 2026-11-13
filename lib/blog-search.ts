@@ -1,5 +1,3 @@
-import ExpiryMap from 'expiry-map';
-import pMemoize from 'p-memoize';
 import { ExtendedRecordMap, RecordMap, SearchResults } from 'notion-types';
 import {
   getAllPagesInSpace,
@@ -22,67 +20,85 @@ export function createBlogSearch({
   rootSpaceId?: string;
   getPage: (pageId: string) => Promise<ExtendedRecordMap>;
 }) {
-  const getIndex = pMemoize(
-    async () => {
-      const pages = await getAllPagesInSpace(rootPageId, rootSpaceId, getPage);
-      if (!pages[parsePageId(rootPageId)]) throw new Error('Unable to load the blog search index');
+  const buildIndex = async () => {
+    const pages = await getAllPagesInSpace(rootPageId, rootSpaceId, getPage);
+    if (!pages[parsePageId(rootPageId)]) throw new Error('Unable to load the blog search index');
 
-      return Object.entries(pages).flatMap(([id, map]) => {
-        const page = map?.block[id]?.value;
-        if (!page || (page.type !== 'page' && page.type !== 'collection_view_page')) return [];
-        const title = getBlockTitle(page, map);
-        if (!title) return [];
+    return Object.entries(pages).flatMap(([id, map]) => {
+      const page = map?.block[id]?.value;
+      if (!page || (page.type !== 'page' && page.type !== 'collection_view_page')) return [];
+      const title = getBlockTitle(page, map);
+      if (!title) return [];
 
-        const text = getPageContentBlockIds(map, id)
-          .filter(blockId => {
-            const block = map.block[blockId]?.value;
-            return (
-              blockId !== id &&
-              block &&
-              block.type !== 'page' &&
-              block.type !== 'collection_view_page'
-            );
-          })
-          .map(blockId => {
-            const block = map.block[blockId]?.value;
-            const properties = Object.entries(block?.properties || {})
-              .filter(([key]) => key !== 'source')
-              .map(([, value]) => (Array.isArray(value) ? getTextContent(value) : ''));
-            const publicLink =
-              block?.type === 'external_object_instance' ? block.format?.original_url : undefined;
-            return [...properties, publicLink].filter(Boolean).join(' ');
-          })
-          .join(' ')
-          .normalize('NFKC')
-          .replace(/\s+/g, ' ')
-          .trim();
+      const text = getPageContentBlockIds(map, id)
+        .filter(blockId => {
+          const block = map.block[blockId]?.value;
+          return (
+            blockId !== id &&
+            block &&
+            block.type !== 'page' &&
+            block.type !== 'collection_view_page'
+          );
+        })
+        .map(blockId => {
+          const block = map.block[blockId]?.value;
+          const properties = Object.entries(block?.properties || {})
+            .filter(([key]) => key !== 'source')
+            .map(([, value]) => (Array.isArray(value) ? getTextContent(value) : ''));
+          const publicLink =
+            block?.type === 'external_object_instance' ? block.format?.original_url : undefined;
+          return [...properties, publicLink].filter(Boolean).join(' ');
+        })
+        .join(' ')
+        .normalize('NFKC')
+        .replace(/\s+/g, ' ')
+        .trim();
 
-        const collectionId =
-          page.type === 'collection_view_page' ? getBlockCollectionId(page, map) : undefined;
-        const record = {
-          ...map.block[id],
-          value: {
-            ...page,
-            content: undefined,
-            properties: { title: [[title]] },
-            ...(collectionId ? { collection_id: collectionId } : {}),
-          },
-        };
-        return [
-          {
-            id,
-            title,
-            text,
-            haystack: normalize(`${title} ${text}`),
-            record,
-            collectionId,
-            collection: collectionId && map.collection[collectionId],
-          },
-        ];
-      });
-    },
-    { cache: new ExpiryMap(60_000) },
-  );
+      const collectionId =
+        page.type === 'collection_view_page' ? getBlockCollectionId(page, map) : undefined;
+      const record = {
+        ...map.block[id],
+        value: {
+          ...page,
+          content: undefined,
+          properties: { title: [[title]] },
+          ...(collectionId ? { collection_id: collectionId } : {}),
+        },
+      };
+      return [
+        {
+          id,
+          title,
+          text,
+          haystack: normalize(`${title} ${text}`),
+          record,
+          collectionId,
+          collection: collectionId && map.collection[collectionId],
+        },
+      ];
+    });
+  };
+
+  let cachedIndex: Awaited<ReturnType<typeof buildIndex>> | undefined;
+  let cacheUntil = 0;
+  let pendingIndex: ReturnType<typeof buildIndex> | undefined;
+  const getIndex = () => {
+    if (cachedIndex && Date.now() < cacheUntil) return Promise.resolve(cachedIndex);
+    // Opening the dialog warms the index while the first query can already be
+    // arriving. Share the pending crawl instead of issuing both sets of requests.
+    if (!pendingIndex) {
+      pendingIndex = buildIndex()
+        .then(index => {
+          cachedIndex = index;
+          cacheUntil = Date.now() + 60_000;
+          return index;
+        })
+        .finally(() => {
+          pendingIndex = undefined;
+        });
+    }
+    return pendingIndex;
+  };
 
   return async (query: string, limit = 20): Promise<SearchResults> => {
     const index = await getIndex();

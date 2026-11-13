@@ -120,6 +120,8 @@ Vercel의 `NOTION_API_BASE_URL`에 예전 `www.notion.so` 주소가 남아 있�
 노션에서 페이지 아이콘, 커버, 갤러리 카드 설정을 변경할 수 있습니다.
 사이트 전체 설정은 `site.config.ts`, 스타일은 `styles/custom/`에서 변경합니다.
 본문 폰트는 Pretendard이고 이모지는 Tossface를 사용합니다.
+홈의 큰 제목은 `site.config.ts`의 `homePageTitle`에서 변경합니다. 상단 블로그 이름과 브라우저 제목은 기존 사이트 이름을 사용합니다.
+검색창 디자인과 모션은 `styles/custom/search.scss`에서 변경합니다. 화면의 동작 줄이기 설정을 사용하면 전환과 로딩 모션도 줄어듭니다.
 폰트 CSS 주소는 `pages/_document.tsx`, 글꼴 순서는 `styles/custom/vars.scss`의 `--notion-font`에서 변경합니다.
 작성자 사진은 `public/author-avatar.png`를 교체하거나 `site.config.ts`의 `authorAvatarOverrides`에서 노션 사용자 ID에 해당하는 사진 주소를 바꾸면 됩니다.
 노션에 사진이 없거나 이미지 로딩에 실패하면 이름의 첫 글자를 표시합니다.
