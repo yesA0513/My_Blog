@@ -94,6 +94,17 @@ ID 대신 URL을 넣을 때도 원작자의 템플릿 주소가 아니라 본인
 특히 이전 프로젝트의 `NEXT_PUBLIC_SITE_CONFIG` 값은 새 노션 설정을 덮어쓸 수 있습니다.
 새 설정과 충돌하는 이전 값이 있는지 확인하세요.
 
+노션 API의 기본 주소는 `https://app.notion.com/api/v3`입니다.
+기존 `notion.so/api/v3` 환경 변수도 이 주소로 자동 변환합니다.
+`page error ... HTTPError: Response code 403 (Forbidden)`으로 빌드가 실패하면
+Vercel의 `NOTION_API_BASE_URL`에 예전 `www.notion.so` 주소가 남아 있는지 확인하세요.
+해당 변수를 삭제해 기본값을 사용하거나, 값을 `https://app.notion.com/api/v3`로 바꾸고
+적용 대상을 Production과 Preview 모두로 지정한 뒤 실패한 배포를 Redeploy하세요.
+노션 API를 직접 호출하는 주소이므로 공개 노션 페이지 URL을 이 변수에 넣으면 안 됩니다.
+
+본문 사진은 노션에서 발급한 서명된 파일 주소를 사용합니다.
+새 노션 파일 주소와 기존 S3 파일 주소를 지원하며, 서명된 주소를 다시 이미지 프록시에 넣지 않습니다.
+
 **5. 배포하고 첫 글 확인하기**
 
 `Deploy`를 누르세요. 완료 후 `Visit`에서 블로그를 확인합니다.

@@ -4,6 +4,7 @@ import { test } from 'node:test';
 
 import { NotionAPI } from '../packages/notion-client/notion-api';
 import { normalizeRecordMap } from '../packages/notion-client/normalize-record-map';
+import { defaultMapImageUrl } from '../packages/react-notion-x/map-image-url';
 
 const pageId = '01234567-89ab-cdef-0123-456789abcdef';
 const textId = '11234567-89ab-cdef-0123-456789abcdef';
@@ -11,6 +12,63 @@ const viewBlockId = '21234567-89ab-cdef-0123-456789abcdef';
 const collectionId = '31234567-89ab-cdef-0123-456789abcdef';
 const viewId = '41234567-89ab-cdef-0123-456789abcdef';
 const postId = '51234567-89ab-cdef-0123-456789abcdef';
+
+test('preserves current signed Notion file URLs without encoding their signatures again', () => {
+  const block = { id: postId, parent_table: 'block' } as any;
+  const signed =
+    'https://file.notion.com/f/f/space/file/photo.png?table=block&id=photo&expirationTimestamp=9999999999999&signature=a%2Fb%3D';
+  assert.equal(defaultMapImageUrl(signed, block), signed);
+
+  const unsigned = 'https://file.notion.com/f/f/space/file/photo.png';
+  const proxy = new URL(defaultMapImageUrl(unsigned, block));
+  assert.equal(proxy.origin, 'https://app.notion.com');
+  assert.equal(decodeURIComponent(proxy.pathname.slice('/image/'.length)), unsigned);
+});
+
+test('preserves both old and new signed S3 image URLs', () => {
+  const block = { id: postId, parent_table: 'block' } as any;
+  for (const path of [
+    's3.us-west-2.amazonaws.com/secure.notion-static.com/file/photo.png',
+    'prod-files-secure.s3.us-west-2.amazonaws.com/space/file/photo.png',
+  ]) {
+    const signed = `https://${path}?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=credential&X-Amz-Signature=signature`;
+    assert.equal(defaultMapImageUrl(signed, block), signed);
+  }
+});
+
+test('resolves attachments and existing Notion image proxies on the current host', () => {
+  const block = { id: postId, parent_table: 'collection' } as any;
+  const source = 'attachment:file-id:한글 사진.png';
+  const proxy = new URL(defaultMapImageUrl(source, block));
+  assert.equal(proxy.origin, 'https://app.notion.com');
+  assert.equal(decodeURIComponent(proxy.pathname.slice('/image/'.length)), source);
+  assert.equal(proxy.searchParams.get('table'), 'block');
+  assert.equal(proxy.searchParams.get('id'), postId);
+
+  const legacy = new URL(proxy);
+  legacy.hostname = 'www.notion.so';
+  legacy.searchParams.set('width', '1200');
+  const migrated = new URL(defaultMapImageUrl(legacy.toString(), block));
+  assert.equal(migrated.origin, 'https://app.notion.com');
+  assert.equal(migrated.pathname, proxy.pathname);
+  assert.equal(migrated.searchParams.get('width'), '1200');
+});
+
+test('keeps direct images and resolves built-in Notion images and icons', () => {
+  const block = { id: postId, parent_table: 'block' } as any;
+  for (const source of ['https://images.unsplash.com/photo-123', 'data:image/png;base64,AAA']) {
+    assert.equal(defaultMapImageUrl(source, block), source);
+  }
+  assert.equal(
+    defaultMapImageUrl('/images/page-cover/photo.jpg', block),
+    'https://app.notion.com/images/page-cover/photo.jpg',
+  );
+  assert.equal(
+    defaultMapImageUrl('https://www.notion.so/icons/computer_gray.svg', block),
+    'https://app.notion.com/icons/computer_gray.svg',
+  );
+  assert.equal(defaultMapImageUrl('', block), null);
+});
 
 function entry(value: any) {
   return { spaceId: 'public-space', value: { value, role: 'reader' } };
@@ -33,7 +91,7 @@ function pageRecordMap(authorId?: string) {
 
 async function withApi(
   reply: (endpoint: string, body: any) => { status?: number; body: any },
-  check: (api: NotionAPI, requests: string[]) => Promise<void>,
+  check: (api: NotionAPI, requests: string[], apiBaseUrl: string) => Promise<void>,
   options: { hiddenCollectionViewIds?: string[] } = {},
 ) {
   const requests: string[] = [];
@@ -52,10 +110,8 @@ async function withApi(
   try {
     const address = server.address();
     if (typeof address === 'string' || !address) throw new Error('No test server address');
-    await check(
-      new NotionAPI({ apiBaseUrl: `http://127.0.0.1:${address.port}`, ...options }),
-      requests,
-    );
+    const apiBaseUrl = `http://127.0.0.1:${address.port}`;
+    await check(new NotionAPI({ apiBaseUrl, ...options }), requests, apiBaseUrl);
   } finally {
     server.closeAllConnections();
     await new Promise<void>((resolve, reject) =>
@@ -63,6 +119,40 @@ async function withApi(
     );
   }
 }
+
+test('uses the current API host with missing, blank, or legacy deployment overrides', async () => {
+  await withApi(
+    () => ({ body: { recordMap: pageRecordMap() } }),
+    async (_api, _requests, testApiBaseUrl) => {
+      const destinations: string[] = [];
+      for (const apiBaseUrl of [
+        undefined,
+        '',
+        ' https://www.notion.so/api/v3/ ',
+        'https://notion.com/api/v3',
+      ]) {
+        const api = new NotionAPI({ apiBaseUrl });
+        const map = await api.getPage(pageId, {
+          fetchCollections: false,
+          signFileUrls: false,
+          gotOptions: {
+            hooks: {
+              beforeRequest: [
+                options => {
+                  destinations.push(options.url.toString());
+                  // Test the outgoing request without using the public network.
+                  options.url = new URL(`${testApiBaseUrl}/loadPageChunk`);
+                },
+              ],
+            },
+          },
+        });
+        assert.equal(map.block[pageId].value.type, 'page');
+      }
+      assert.deepEqual(destinations, Array(4).fill('https://app.notion.com/api/v3/loadPageChunk'));
+    },
+  );
+});
 
 test('normalizes nested records in every table and preserves legacy entries', () => {
   const legacy = { role: 'reader', value: { id: textId, type: 'text' } };

@@ -18,7 +18,7 @@ export class NotionAPI {
   private readonly _hiddenCollectionViewIds: Set<string>;
 
   constructor({
-    apiBaseUrl = 'https://www.notion.so/api/v3',
+    apiBaseUrl = 'https://app.notion.com/api/v3',
     authToken,
     activeUser,
     userTimeZone = 'America/New_York',
@@ -31,7 +31,11 @@ export class NotionAPI {
     activeUser?: string;
     hiddenCollectionViewIds?: string[];
   } = {}) {
-    this._apiBaseUrl = apiBaseUrl;
+    const baseUrl = apiBaseUrl.trim().replace(/\/+$/, '') || 'https://app.notion.com/api/v3';
+    // Migrate stale deployment overrides as well as changing the default host.
+    this._apiBaseUrl = /^https:\/\/(?:www\.)?notion\.(?:so|com)\/api\/v3$/i.test(baseUrl)
+      ? 'https://app.notion.com/api/v3'
+      : baseUrl;
     this._authToken = authToken;
     this._activeUser = activeUser;
     this._userTimeZone = userTimeZone;

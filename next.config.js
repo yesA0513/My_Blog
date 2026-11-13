@@ -23,6 +23,14 @@ module.exports = withBundleAnalyzer({
       },
       {
         protocol: 'https',
+        hostname: 'app.notion.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'file.notion.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'images.unsplash.com',
       },
       {
