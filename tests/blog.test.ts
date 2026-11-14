@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import { createBlogSearch } from '../lib/blog-search';
 import { createNavigationHistory } from '../lib/navigation-history';
+import { getPostDate } from '../lib/post-date';
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 const [root, gallery, memo, post, draft, daily, hardware, hidden] = Array.from(
@@ -223,4 +224,36 @@ test('back navigation stays inside the blog after pushes, replaces, and browser 
   history.visit('post');
   assert.equal(history.hasPrevious('post'), true);
   assert.equal(history.hasPrevious('unknown-external-entry'), false);
+});
+
+test('post headers use the Notion writing date rather than the page copy timestamp', () => {
+  const collection = { schema: { date: { name: '작성일', type: 'date' } } } as any;
+  const block = {
+    created_time: Date.parse('2026-11-13T06:00:00Z'),
+    properties: { date: [['‣', [['d', { type: 'date', start_date: '2025-06-08' }]]]] },
+  } as any;
+  assert.deepEqual(getPostDate(block, collection), {
+    dateTime: '2025-06-08',
+    label: '2025년 06월 08일',
+  });
+});
+
+test('an empty or invalid writing date falls back to the creation date in Korea', () => {
+  const collection = { schema: { date: { name: '작성 날짜', type: 'date' } } } as any;
+  const block = { created_time: Date.parse('2026-11-12T16:30:00Z'), properties: {} } as any;
+  const expected = { dateTime: '2026-11-12T16:30:00.000Z', label: '2026년 11월 13일' };
+  assert.deepEqual(getPostDate(block, collection), expected);
+  block.properties.date = [['‣', [['d', { start_date: '2026-02-30' }]]]];
+  assert.deepEqual(getPostDate(block, collection), expected);
+});
+
+test('a deadline is not mistaken for a writing date and missing dates stay empty', () => {
+  const collection = { schema: { date: { name: '마감일', type: 'date' } } } as any;
+  const block = {
+    created_time: Date.parse('2026-11-12T16:30:00Z'),
+    properties: { date: [['‣', [['d', { start_date: '2027-01-01' }]]]] },
+  } as any;
+  assert.equal(getPostDate(block, collection)?.label, '2026년 11월 13일');
+  delete block.created_time;
+  assert.equal(getPostDate(block, collection), null);
 });
