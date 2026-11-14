@@ -1,6 +1,6 @@
 import * as React from 'react';
 import cs from 'classnames';
-import { IoSunnyOutline, IoMoonSharp } from 'react-icons/io5';
+import { IoSunnyOutline, IoMoonOutline } from 'react-icons/io5';
 import { Breadcrumbs, Search, useNotionContext } from 'react-notion-x';
 import * as types from 'notion-types';
 
@@ -19,17 +19,23 @@ export const ToggleThemeButton = () => {
     setHasMounted(true);
   }, []);
 
-  const onToggleTheme = React.useCallback(() => {
-    toggleDarkMode();
-  }, [toggleDarkMode]);
+  const showDarkMode = hasMounted && isDarkMode;
 
   return (
-    <div
-      className={cs('breadcrumb', 'button', !hasMounted && styles.hidden)}
-      onClick={onToggleTheme}
+    <button
+      type="button"
+      className={cs('breadcrumb', 'button', 'blog-theme-button', !hasMounted && styles.hidden)}
+      aria-label="다크 모드"
+      aria-pressed={showDarkMode}
+      title={showDarkMode ? '라이트 모드로 전환' : '다크 모드로 전환'}
+      onClick={toggleDarkMode}
     >
-      {hasMounted && isDarkMode ? <IoMoonSharp /> : <IoSunnyOutline />}
-    </div>
+      {showDarkMode ? (
+        <IoMoonOutline aria-hidden="true" focusable="false" />
+      ) : (
+        <IoSunnyOutline aria-hidden="true" focusable="false" />
+      )}
+    </button>
   );
 };
 
@@ -49,7 +55,10 @@ export const NotionPageHeader: React.FC<{
       <header className="notion-header">
         <div className="notion-nav-header">
           {breadcrumbs}
-          {isSearchEnabled && <Search block={block} title="검색" />}
+          <div className="blog-header-actions">
+            <ToggleThemeButton />
+            {isSearchEnabled && <Search block={block} title="검색" />}
+          </div>
         </div>
       </header>
     );
@@ -60,7 +69,7 @@ export const NotionPageHeader: React.FC<{
       <div className="notion-nav-header">
         {breadcrumbs}
 
-        <div className="notion-nav-header-rhs breadcrumbs">
+        <div className="notion-nav-header-rhs breadcrumbs blog-header-actions">
           {navigationLinks
             ?.map((link, index) => {
               if ((!link.pageId && !link.url) || link.menuPage) {
