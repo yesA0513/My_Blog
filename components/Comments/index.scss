@@ -1,18 +1,44 @@
 .notion-comments {
-  margin-top: 3rem;
+  --comments-muted: color-mix(in srgb, var(--fg-color) 70%, transparent);
+  --comments-soft: color-mix(in srgb, var(--fg-color) 6%, transparent);
   width: 100%;
+  margin-top: 3rem;
+  padding-top: 24px;
+  border-top: 1px solid var(--line-color);
+  color: var(--fg-color);
+  font-family: var(--notion-font);
+  font-size: 15px;
+  line-height: 1.65;
 
   @media (min-width: 1400px) {
-    width: calc(100% - 300px - 5rem);
+    width: calc(100% - var(--notion-aside-width) - var(--notion-aside-space-width));
   }
 
-  h2 {
-    margin-bottom: 2rem;
+  .comments-title {
+    margin: 0 0 20px;
+    padding: 0;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: -0.02em;
   }
 
-  .items {
-    display: flex;
-    flex-direction: column;
+  button {
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease,
+      transform 160ms ease;
+
+    &:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 3px;
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.4;
+    }
   }
 
   .comments-feedback {
@@ -20,8 +46,8 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
-    margin: 0 0 1rem;
-    color: var(--fg-color-3);
+    margin: 0 0 16px;
+    color: var(--comments-muted);
     font-size: 14px;
 
     button {
@@ -29,41 +55,87 @@
       border: 0;
       background: transparent;
       color: var(--fg-color);
-      font: inherit;
       text-decoration: underline;
       text-underline-offset: 3px;
-      cursor: pointer;
     }
   }
 
-  .comments-more {
-    display: block;
-    margin: 24px auto 0;
-    padding: 8px 16px;
+  .comments-submit-error {
+    margin: 12px 0 0;
+  }
+
+  .comments-composer {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 16px;
     border: 1px solid var(--line-color);
-    border-radius: 12px;
+    border-radius: 16px;
     background: transparent;
-    color: var(--fg-color);
-    font: inherit;
-    font-size: 14px;
-    cursor: pointer;
+    transition: border-color 160ms ease;
+
+    &:focus-within {
+      border-color: var(--primary-color);
+    }
+
+    textarea {
+      display: block;
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 84px;
+      max-height: 320px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--fg-color);
+      font: inherit;
+      font-size: 16px;
+      resize: vertical;
+
+      &::placeholder {
+        color: var(--comments-muted);
+        opacity: 1;
+      }
+    }
   }
 
-  button:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
+  .comments-composer-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
   }
 
-  button:disabled {
-    cursor: default;
-    opacity: 0.45;
-    box-shadow: none;
+  .comments-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    gap: 6px;
+    min-width: 64px;
+    height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--fg-color);
+    color: var(--bg-color);
+    font-weight: 500;
+    line-height: 1;
+
+    &:hover:not(:disabled) {
+      opacity: 0.85;
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.97);
+    }
   }
 
   .comment-submit-loading {
     height: 20px;
     gap: 3px;
-    color: var(--bg-color);
+    color: inherit;
 
     > span {
       width: 4px;
@@ -71,231 +143,102 @@
     }
   }
 
-  .item {
-    width: 100%;
-    display: flex;
-    align-items: flex-end;
+  .comments-list {
+    list-style: none;
+    margin: 24px 0 0;
+    padding: 0;
 
-    + .item {
-      margin-top: 1.5rem;
-    }
-
-    &.reverse {
-      align-self: flex-end;
-      flex-direction: row-reverse;
-
-      .profileImage {
-        margin-right: 0;
-        margin-left: 1rem;
-        border-radius: 50%;
-      }
-
-      .right {
-        .content {
-          align-self: flex-end;
-
-          &::after {
-            left: auto;
-            right: -35px;
-          }
-
-          &::before {
-            left: auto;
-            right: -20px;
-          }
-
-          .texts {
-            text-align: right;
-          }
-        }
-
-        .profile {
-          margin-left: 0;
-          margin-right: 1.5rem;
-          text-align: right;
-          justify-content: flex-end;
-        }
-      }
-    }
-
-    .profileImage {
-      width: 40px;
-      height: 40px;
-      display: block;
-      object-fit: contain;
-      object-position: center;
-      margin-right: 1rem;
-      position: relative;
-      z-index: 1;
-      transition: 250ms filter;
-    }
-
-    .right {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-
-      .content {
-        font-size: 0.95rem;
-        line-height: 1.25;
-        padding: 1rem 1.5rem;
-        position: relative;
-        display: inline-block;
-        align-self: start;
-        max-width: 80%;
-
-        .texts {
-          position: relative;
-          z-index: 2;
-          word-break: break-all;
-        }
-
-        .bg {
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          background-color: var(--fg-color-lighten);
-          border-radius: 25px;
-          z-index: 1;
-          transition: 250ms background-color;
-        }
-
-        &::after {
-          content: '';
-          position: absolute;
-          display: block;
-          height: 40px;
-          width: 40px;
-          border-radius: 50%;
-          z-index: 0;
-          background-color: var(--bg-color);
-          bottom: 4px;
-          left: -35px;
-          transition: 250ms background-color;
-          border-top-right-radius: 0;
-          border-top-left-radius: 0;
-        }
-
-        &::before {
-          content: '';
-          position: absolute;
-          display: block;
-          height: 40px;
-          width: 40px;
-          border-radius: 50%;
-          z-index: 0;
-          background-color: var(--fg-color-lighten);
-          bottom: 1px;
-          left: -20px;
-          transition: 250ms background-color;
-        }
-      }
-
-      .profile {
-        margin-top: 0.5rem;
-        margin-left: 1.5rem;
-        display: flex;
-        font-size: 0.85rem;
-        line-height: 1;
-        align-items: center;
-
-        .name {
-          svg {
-            margin-right: 0.3rem;
-            fill: #9ccc65;
-            height: 0.9rem;
-            transform: translateY(-1px);
-          }
-        }
-
-        & > div:not(:last-child) {
-          display: flex;
-          align-items: center;
-
-          &::after {
-            content: '';
-            display: block;
-            width: 1px;
-            height: 8px;
-            background-color: var(--fg-color);
-            margin: 0 0.5rem;
-            opacity: 0.5;
-          }
-        }
-      }
+    &:empty {
+      margin: 0;
     }
   }
 
-  form {
-    width: 100%;
-    margin-bottom: 3rem;
+  .comment-item {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    margin: 0;
+    padding: 20px 0;
 
-    &.loading {
-      textarea,
-      button {
-        opacity: 0.5;
-      }
+    & + .comment-item {
+      border-top: 1px solid var(--line-color);
     }
+  }
 
-    .right {
-      width: 100%;
+  .comment-avatar .notion-user {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    border-radius: 50%;
+    background: var(--comments-soft);
+    color: var(--fg-color);
+    object-fit: cover;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  .comment-body {
+    min-width: 0;
+  }
+
+  .comment-meta {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    min-height: 20px;
+    line-height: 1.4;
+
+    time {
+      color: var(--comments-muted);
+      font-size: 12px;
+      white-space: nowrap;
     }
+  }
 
-    .content {
-      margin-bottom: 1.5rem;
-      width: 100%;
-      display: flex !important;
-      flex-direction: column;
-      align-items: flex-end;
+  .comment-author {
+    min-width: 0;
+    color: var(--fg-color);
+    font-size: 14px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
 
-      textarea {
-        width: 100%;
-        position: relative;
-        z-index: 2;
-        background-color: transparent;
-        border: none;
-        outline: none;
-        resize: none;
-        color: var(--fg-color);
-        font-family: var(--notion-font);
-        transition: 250ms opacity;
-      }
+  .comment-text {
+    margin: 6px 0 0;
+    color: var(--fg-color);
+    font-size: 15px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
 
-      button {
-        position: relative;
-        z-index: 2;
-        cursor: pointer;
-        outline: none;
-        border: none;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        background-color: var(--fg-color);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: 250ms box-shadow, 250ms opacity;
+  .comments-more {
+    display: block;
+    margin: 16px auto 0;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--comments-muted);
 
-        &:hover {
-          box-shadow: 0 0 5px var(--fg-color);
-        }
-
-        svg {
-          fill: var(--bg-color);
-          width: 20px;
-        }
-      }
+    &:hover:not(:disabled) {
+      background: var(--comments-soft);
+      color: var(--fg-color);
     }
   }
 }
 
-// 라이트 모드일 때 게스트 프로필 색상 반전
-body:not(.dark-mode) {
-  .notion-comments {
-    .profileImage.guest {
-      filter: invert(0.6);
-    }
+@media (prefers-reduced-motion: reduce) {
+  .notion-comments *,
+  .notion-comments *::before,
+  .notion-comments *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }
