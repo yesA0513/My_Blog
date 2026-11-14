@@ -418,6 +418,87 @@ body.blog-search-open {
   }
 }
 
+@media (min-width: 601px) {
+  .notion-search {
+    width: min(100%, 560px);
+    max-width: 560px;
+    border-radius: 32px;
+    box-shadow: 0 16px 56px rgba(0, 0, 0, 0.14), 0 3px 12px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+    .search-toolbar {
+      gap: 8px;
+      padding: 10px 20px;
+
+      &::after {
+        right: 20px;
+        left: 20px;
+      }
+    }
+    .searchBar {
+      min-height: 38px;
+      gap: 12px;
+      font-size: 20px;
+    }
+    .searchInput {
+      font-weight: 400;
+    }
+    .inlineIcon svg {
+      width: 22px;
+      height: 22px;
+    }
+    .search-close {
+      width: 28px;
+      height: 32px;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+    .search-body--active {
+      max-height: min(400px, 55dvh);
+    }
+    .resultsPane {
+      padding: 8px;
+    }
+    .resultsPane .result {
+      min-height: 56px;
+      gap: 12px;
+      padding: 7px 12px;
+      border-radius: 20px;
+    }
+    .search-result-icon {
+      width: 28px;
+      height: 30px;
+
+      .notion-page-icon-inline {
+        width: 26px;
+        height: 26px;
+      }
+      .notion-page-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 24px;
+        line-height: 26px;
+      }
+    }
+    .search-result-title {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    .resultsPane .result .notion-search-result-highlight {
+      margin-top: 1px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .search-result-enter {
+      font-size: 18px;
+    }
+  }
+}
+
 @media (max-width: 600px) {
   .notion-search-overlay {
     padding: clamp(20px, 10dvh, 64px) 12px 20px;
