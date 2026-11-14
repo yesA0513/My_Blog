@@ -7,7 +7,6 @@ import { useNotionContext } from '../context';
 import { getYoutubeId } from '../utils';
 import { LazyImage } from './lazy-image';
 import { LiteYouTubeEmbed } from './lite-youtube-embed';
-import { defaultMapImageUrl, getHeifImageType } from '../map-image-url';
 
 const isServer = typeof window === 'undefined';
 
@@ -254,20 +253,14 @@ export const Asset: React.FC<{
   } else if (block.type === 'image') {
     // console.log('image', block)
 
-    const src = mapImageUrl(source, block as Block);
-    const originalSource = block.properties?.source?.[0]?.[0] || source;
-    const sourceType = getHeifImageType(originalSource) || getHeifImageType(src);
-    const fallbackSrc = sourceType
-      ? defaultMapImageUrl(originalSource, block as Block, { forceProxy: true, width: 1920 })
-      : undefined;
+    // Stable attachment references let Notion resolve a fresh WebP rendition.
+    const src = mapImageUrl(block.properties?.source?.[0]?.[0] || source, block as Block);
     const caption = getTextContent(block.properties?.caption);
     const alt = caption || 'notion image';
 
     content = (
       <LazyImage
         src={src}
-        sourceType={sourceType}
-        fallbackSrc={fallbackSrc}
         alt={alt}
         zoomable={zoomable}
         height={style.height as number}

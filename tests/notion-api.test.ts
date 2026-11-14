@@ -4,7 +4,8 @@ import { test } from 'node:test';
 
 import { NotionAPI } from '../packages/notion-client/notion-api';
 import { normalizeRecordMap } from '../packages/notion-client/normalize-record-map';
-import { defaultMapImageUrl, getHeifImageType } from '../packages/react-notion-x/map-image-url';
+import { defaultMapImageUrl } from '../packages/react-notion-x/map-image-url';
+import { mapImageUrl } from '../lib/map-image-url';
 
 const pageId = '01234567-89ab-cdef-0123-456789abcdef';
 const textId = '11234567-89ab-cdef-0123-456789abcdef';
@@ -412,16 +413,40 @@ test('merges normalized collection results so gallery posts remain visible', asy
   );
 });
 
-test('detects HEIF-family uploads and encoded attachment paths without treating HDR JPEGs as HEIF', () => {
-  assert.equal(getHeifImageType('attachment:file-id:IMG_3838.HEIC'), 'image/heic');
-  assert.equal(
-    getHeifImageType('https://file.notion.com/photo%20one%2Eheif?signature=abc'),
-    'image/heif',
-  );
-  assert.equal(getHeifImageType('/image/attachment%3Afile%3Aphoto.hif?width=1000'), 'image/heif');
-  assert.equal(getHeifImageType('https://example.com/photo.jpeg?name=photo.heic'), null);
-  assert.equal(getHeifImageType('https://example.com/HDR.jpg'), null);
-  assert.equal(getHeifImageType('data:image/jpeg;base64,heic'), null);
+test('blog photos always request WebP regardless of original format or browser HEIF support', () => {
+  const block = { id: postId, parent_table: 'block' } as any;
+  for (const source of [
+    'attachment:file-id:IMG_3838.HEIC',
+    'attachment:file-id:photo.heif',
+    'https://file.notion.com/photo.hif?signature=abc&expirationTimestamp=9999999999999',
+    'https://file.notion.com/photo.png?signature=abc&expirationTimestamp=9999999999999',
+    'https://example.com/HDR.jpg',
+    'https://images.unsplash.com/photo-123',
+    '/images/page-cover/photo.jpg',
+  ]) {
+    const url = new URL(mapImageUrl(source, block));
+    assert.equal(url.origin, 'https://app.notion.com');
+    assert.equal(url.searchParams.get('format'), 'webp');
+    assert.equal(url.searchParams.get('width'), '1920');
+    assert.equal(url.searchParams.get('id'), postId);
+    assert.equal(url.searchParams.get('table'), 'block');
+  }
+});
+
+test('blog WebP policy preserves vector icons, animation, local and inline assets', () => {
+  const block = { id: postId } as any;
+  for (const source of ['/author.jpg', '/error.png', 'data:image/png;base64,AAA', 'blob:photo']) {
+    assert.equal(mapImageUrl(source, block), source);
+  }
+  for (const source of [
+    '/icons/computer_gray.svg',
+    'https://www.notion.so/icons/computer_gray.svg',
+    'attachment:file-id:animated.GIF',
+    'https://example.com/icon%2Esvg?version=1',
+  ]) {
+    assert.equal(mapImageUrl(source, block), defaultMapImageUrl(source, block));
+  }
+  assert.equal(mapImageUrl('', block), null);
 });
 
 test('requests a compatible rendition only when explicitly asked, preserving signed originals', () => {
@@ -437,21 +462,11 @@ test('requests a compatible rendition only when explicitly asked, preserving sig
   assert.equal(fallback.searchParams.get('table'), 'block');
 });
 
-test('uses stable attachment references for HEIF renditions without changing stored originals', () => {
+test('WebP renditions use stable attachment references and never nest existing image proxies', () => {
   const source = 'attachment:file-id:IMG_3838.heic';
-  const fallback = new URL(
-    defaultMapImageUrl(source, { id: postId, parent_table: 'collection' } as any, {
-      forceProxy: true,
-      width: 1920,
-    }),
-  );
+  const fallback = new URL(mapImageUrl(source, { id: postId, parent_table: 'collection' } as any));
   assert.equal(decodeURIComponent(fallback.pathname.slice('/image/'.length)), source);
   assert.equal(fallback.searchParams.get('table'), 'block');
-  const updated = new URL(
-    defaultMapImageUrl(fallback.toString(), { id: postId } as any, {
-      forceProxy: true,
-      width: 1920,
-    }),
-  );
+  const updated = new URL(mapImageUrl(fallback.toString(), { id: postId } as any));
   assert.equal(updated.toString(), fallback.toString());
 });
