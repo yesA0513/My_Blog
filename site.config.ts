@@ -36,5 +36,5 @@ export default siteConfig({
   hiddenCollectionViewIds: ['41722acc-6a48-80d2-b856-000c4b07304f'],
   contentPositionTextAlign: 'left',
   defaultTheme: 'system',
-  enableComment: false,
+  enableComment: true,
 });
