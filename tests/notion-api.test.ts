@@ -4,7 +4,7 @@ import { test } from 'node:test';
 
 import { NotionAPI } from '../packages/notion-client/notion-api';
 import { normalizeRecordMap } from '../packages/notion-client/normalize-record-map';
-import { defaultMapImageUrl } from '../packages/react-notion-x/map-image-url';
+import { defaultMapImageUrl, getHeifImageType } from '../packages/react-notion-x/map-image-url';
 
 const pageId = '01234567-89ab-cdef-0123-456789abcdef';
 const textId = '11234567-89ab-cdef-0123-456789abcdef';
@@ -410,4 +410,48 @@ test('merges normalized collection results so gallery posts remain visible', asy
       assert.deepEqual(requests, ['loadPageChunk', 'queryCollection']);
     },
   );
+});
+
+test('detects HEIF-family uploads and encoded attachment paths without treating HDR JPEGs as HEIF', () => {
+  assert.equal(getHeifImageType('attachment:file-id:IMG_3838.HEIC'), 'image/heic');
+  assert.equal(
+    getHeifImageType('https://file.notion.com/photo%20one%2Eheif?signature=abc'),
+    'image/heif',
+  );
+  assert.equal(getHeifImageType('/image/attachment%3Afile%3Aphoto.hif?width=1000'), 'image/heif');
+  assert.equal(getHeifImageType('https://example.com/photo.jpeg?name=photo.heic'), null);
+  assert.equal(getHeifImageType('https://example.com/HDR.jpg'), null);
+  assert.equal(getHeifImageType('data:image/jpeg;base64,heic'), null);
+});
+
+test('requests a compatible rendition only when explicitly asked, preserving signed originals', () => {
+  const block = { id: postId, parent_table: 'block' } as any;
+  const signed =
+    'https://file.notion.com/f/f/space/file/IMG.heic?expirationTimestamp=9999999999999&signature=a%2Fb%3D';
+  assert.equal(defaultMapImageUrl(signed, block), signed);
+  const fallback = new URL(defaultMapImageUrl(signed, block, { forceProxy: true, width: 1920 }));
+  assert.equal(fallback.origin, 'https://app.notion.com');
+  assert.equal(decodeURIComponent(fallback.pathname.slice('/image/'.length)), signed);
+  assert.equal(fallback.searchParams.get('width'), '1920');
+  assert.equal(fallback.searchParams.get('id'), postId);
+  assert.equal(fallback.searchParams.get('table'), 'block');
+});
+
+test('uses stable attachment references for HEIF renditions without changing stored originals', () => {
+  const source = 'attachment:file-id:IMG_3838.heic';
+  const fallback = new URL(
+    defaultMapImageUrl(source, { id: postId, parent_table: 'collection' } as any, {
+      forceProxy: true,
+      width: 1920,
+    }),
+  );
+  assert.equal(decodeURIComponent(fallback.pathname.slice('/image/'.length)), source);
+  assert.equal(fallback.searchParams.get('table'), 'block');
+  const updated = new URL(
+    defaultMapImageUrl(fallback.toString(), { id: postId } as any, {
+      forceProxy: true,
+      width: 1920,
+    }),
+  );
+  assert.equal(updated.toString(), fallback.toString());
 });
