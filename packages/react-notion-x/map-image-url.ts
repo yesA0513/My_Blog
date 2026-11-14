@@ -9,7 +9,25 @@ const notionHosts = new Set([
   'app.notion.com',
 ]);
 
-export const defaultMapImageUrl = (url: string, block: Block): string | null => {
+export const getHeifImageType = (url?: string): 'image/heic' | 'image/heif' | null => {
+  if (!url || url.startsWith('data:')) return null;
+  let path = url.split(/[?#]/)[0];
+  try {
+    path = decodeURIComponent(path);
+  } catch {
+    // Malformed escapes must not prevent other images from rendering.
+  }
+  path = path.split(/[?#]/)[0];
+  if (/\.heic$/i.test(path)) return 'image/heic';
+  if (/\.(heif|hif)$/i.test(path)) return 'image/heif';
+  return null;
+};
+
+export const defaultMapImageUrl = (
+  url: string,
+  block: Block,
+  { forceProxy = false, width }: { forceProxy?: boolean; width?: number } = {},
+): string | null => {
   if (!url) return null;
   if (url.startsWith('data:')) return url;
 
@@ -20,14 +38,15 @@ export const defaultMapImageUrl = (url: string, block: Block): string | null => 
       // Signed file URLs already grant access. Proxying them again can break
       // their signatures or depend on the old Notion domain being reachable.
       if (
-        (source.hostname === 'file.notion.com' &&
+        !forceProxy &&
+        ((source.hostname === 'file.notion.com' &&
           source.searchParams.has('signature') &&
           source.searchParams.has('expirationTimestamp')) ||
-        (source.hostname.endsWith('.amazonaws.com') &&
-          source.searchParams.has('X-Amz-Credential') &&
-          source.searchParams.has('X-Amz-Signature') &&
-          source.searchParams.has('X-Amz-Algorithm')) ||
-        source.hostname === 'images.unsplash.com'
+          (source.hostname.endsWith('.amazonaws.com') &&
+            source.searchParams.has('X-Amz-Credential') &&
+            source.searchParams.has('X-Amz-Signature') &&
+            source.searchParams.has('X-Amz-Algorithm')) ||
+          source.hostname === 'images.unsplash.com')
       ) {
         return url;
       }
@@ -62,5 +81,8 @@ export const defaultMapImageUrl = (url: string, block: Block): string | null => 
   imageUrl.searchParams.set('table', table);
   imageUrl.searchParams.set('id', block.id);
   imageUrl.searchParams.set('cache', 'v2');
+  if (Number.isFinite(width) && width > 0) {
+    imageUrl.searchParams.set('width', String(Math.round(width)));
+  }
   return imageUrl.toString();
 };
