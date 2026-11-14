@@ -9,27 +9,18 @@ const notionHosts = new Set([
   'app.notion.com',
 ]);
 
-export const getHeifImageType = (url?: string): 'image/heic' | 'image/heif' | null => {
-  if (!url || url.startsWith('data:')) return null;
-  let path = url.split(/[?#]/)[0];
-  try {
-    path = decodeURIComponent(path);
-  } catch {
-    // Malformed escapes must not prevent other images from rendering.
-  }
-  path = path.split(/[?#]/)[0];
-  if (/\.heic$/i.test(path)) return 'image/heic';
-  if (/\.(heif|hif)$/i.test(path)) return 'image/heif';
-  return null;
-};
-
 export const defaultMapImageUrl = (
   url: string,
   block: Block,
-  { forceProxy = false, width }: { forceProxy?: boolean; width?: number } = {},
+  {
+    forceProxy = false,
+    width,
+    format,
+  }: { forceProxy?: boolean; width?: number; format?: 'webp' } = {},
 ): string | null => {
   if (!url) return null;
   if (url.startsWith('data:')) return url;
+  if (format && url.startsWith('/images/')) url = `${notionOrigin}${url}`;
 
   let imageUrl: URL;
   try {
@@ -52,7 +43,10 @@ export const defaultMapImageUrl = (
       }
 
       if (notionHosts.has(source.hostname)) {
-        if (source.pathname.startsWith('/images/') || source.pathname.startsWith('/icons/')) {
+        if (
+          !format &&
+          (source.pathname.startsWith('/images/') || source.pathname.startsWith('/icons/'))
+        ) {
           return `${notionOrigin}${source.pathname}${source.search}`;
         }
         if (source.pathname.startsWith('/image/')) {
@@ -84,5 +78,6 @@ export const defaultMapImageUrl = (
   if (Number.isFinite(width) && width > 0) {
     imageUrl.searchParams.set('width', String(Math.round(width)));
   }
+  if (format) imageUrl.searchParams.set('format', format);
   return imageUrl.toString();
 };

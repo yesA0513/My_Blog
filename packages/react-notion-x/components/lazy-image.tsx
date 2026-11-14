@@ -9,28 +9,14 @@ import { cs } from '../utils';
  */
 export const LazyImage: React.FC<{
   src?: string;
-  sourceType?: string;
-  fallbackSrc?: string;
   alt?: string;
   className?: string;
   style?: React.CSSProperties;
   height?: number;
   zoomable?: boolean;
   priority?: boolean;
-}> = ({
-  src,
-  sourceType,
-  fallbackSrc,
-  alt,
-  className,
-  style,
-  zoomable = false,
-  priority = false,
-  height,
-  ...rest
-}) => {
+}> = ({ src, alt, className, style, zoomable = false, priority = false, height, ...rest }) => {
   const { recordMap, zoom, previewImages, forceCustomImages, components } = useNotionContext();
-  const [failedOriginal, setFailedOriginal] = React.useState<string | null>(null);
 
   const zoomRef = React.useRef(zoom ? zoom.clone() : null);
   const previewImage = previewImages
@@ -61,31 +47,6 @@ export const LazyImage: React.FC<{
     () => (zoomable ? attachZoom : undefined),
     [zoomable, attachZoom],
   );
-
-  if (sourceType && fallbackSrc) {
-    // Let the browser keep native HEIF/HDR when supported. Other browsers
-    // select Notion's compatible rendition without downloading the HEIF first.
-    return (
-      <picture style={{ display: 'contents' }}>
-        {failedOriginal !== src && <source type={sourceType} srcSet={src} />}
-        <img
-          className={className}
-          style={style}
-          src={fallbackSrc}
-          alt={alt}
-          ref={attachZoomRef}
-          loading={priority ? 'eager' : 'lazy'}
-          decoding="async"
-          onLoad={event => {
-            // Zoom clones the img without its picture, so preserve the selected source.
-            if (zoomable) event.currentTarget.dataset.zoomSrc = event.currentTarget.currentSrc;
-          }}
-          onError={() => setFailedOriginal(src)}
-          {...rest}
-        />
-      </picture>
-    );
-  }
 
   if (previewImage) {
     const aspectRatio = previewImage.originalHeight / previewImage.originalWidth;
