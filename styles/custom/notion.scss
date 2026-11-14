@@ -159,6 +159,15 @@ body {
       min-height: auto;
     }
 
+    .blog-post-date {
+      flex-shrink: 0;
+
+      time {
+        color: var(--fg-color-3);
+        white-space: nowrap;
+      }
+    }
+
     .notion-property-select-item,
     .notion-property-multi_select-item {
       background-color: transparent !important;
