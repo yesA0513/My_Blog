@@ -5,7 +5,7 @@ import { getBlockTitle, getBlockParentPage } from 'notion-utils';
 
 import { SearchIcon } from '../icons/search-icon';
 import { ClearIcon } from '../icons/clear-icon';
-import { PageTitle } from './page-title';
+import { PageIcon } from './page-icon';
 import { cs } from '../utils';
 import { NotionContextConsumer, NotionContextProvider } from '../context';
 
@@ -27,9 +27,11 @@ export class SearchDialog extends React.Component<{
     query: '',
     searchResult: null,
     searchError: null,
+    activeResultIndex: 0,
   };
 
   _inputRef: any;
+  _resultsRef = React.createRef<HTMLDivElement>();
   _search: any;
   _mounted = false;
   _requestId = 0;
@@ -56,8 +58,10 @@ export class SearchDialog extends React.Component<{
 
   render() {
     const { isOpen, onClose } = this.props;
-    const { isLoading, query, searchResult, searchError } = this.state;
+    const { isLoading, query, searchResult, searchError, activeResultIndex } = this.state;
     const hasQuery = !!query.trim();
+    const hasResults = !isLoading && !!searchResult?.results.length;
+    const resultsId = `blog-search-results-${this.props.rootBlockId}`;
 
     return (
       <NotionContextConsumer>
@@ -68,7 +72,7 @@ export class SearchDialog extends React.Component<{
               isOpen={isOpen}
               contentLabel="블로그 검색"
               className={{
-                base: 'notion-search',
+                base: cs('notion-search', hasQuery && !isLoading && 'notion-search--has-results'),
                 afterOpen: 'notion-search--open',
                 beforeClose: 'notion-search--closing',
               }}
@@ -91,12 +95,19 @@ export class SearchDialog extends React.Component<{
                     </span>
                     <input
                       className="searchInput"
-                      role="searchbox"
+                      role="combobox"
                       aria-label="검색어"
+                      aria-autocomplete="list"
+                      aria-expanded={hasResults}
+                      aria-controls={hasResults ? resultsId : undefined}
+                      aria-activedescendant={
+                        hasResults ? `${resultsId}-${activeResultIndex}` : undefined
+                      }
                       placeholder="검색어 입력"
                       value={query}
                       ref={this._inputRef}
                       onChange={this._onChangeQuery}
+                      onKeyDown={this._onInputKeyDown}
                       autoComplete="off"
                       spellCheck={false}
                     />
@@ -141,33 +152,16 @@ export class SearchDialog extends React.Component<{
                   </button>
                 </div>
 
-                <div className={cs('search-body', hasQuery && 'search-body--active')}>
+                <div
+                  className={cs('search-body', hasQuery && !isLoading && 'search-body--active')}
+                  aria-busy={isLoading}
+                >
                   {!hasQuery ? null : isLoading ? (
-                    <div className="search-skeletons" role="status" aria-label="검색 중입니다">
-                      {[0, 1, 2].map(index => (
-                        <div className="search-skeleton-row" key={index} aria-hidden="true">
-                          <span className="search-skeleton-icon" />
-                          <div className="search-skeleton-lines">
-                            <div className="search-skeleton-line" />
-                            <div className="search-skeleton-line" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <span className="search-status" role="status">
+                      검색 중입니다
+                    </span>
                   ) : searchError ? (
                     <div className="search-state" role="alert">
-                      <span className="search-state-icon" aria-hidden="true">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
-                          style={{ fill: 'none' }}
-                        >
-                          <circle cx="12" cy="12" r="9" />
-                          <path d="M12 7v6m0 3v1" />
-                        </svg>
-                      </span>
                       <p className="noResults">검색을 불러오지 못했습니다.</p>
                       <button type="button" className="search-retry" onClick={this._onRetrySearch}>
                         다시 시도
@@ -175,59 +169,55 @@ export class SearchDialog extends React.Component<{
                     </div>
                   ) : searchResult?.results.length ? (
                     <NotionContextProvider {...ctx} recordMap={searchResult.recordMap}>
-                      <div className="resultsPane" key={query}>
+                      <div
+                        className="resultsPane"
+                        key={query}
+                        id={resultsId}
+                        ref={this._resultsRef}
+                        role="listbox"
+                        aria-label="검색 결과"
+                      >
                         {searchResult.results.map((result, index) => (
                           <components.PageLink
                             key={result.id}
-                            className={cs('result', 'notion-page-link')}
+                            id={`${resultsId}-${index}`}
+                            role="option"
+                            aria-selected={index === activeResultIndex}
+                            className={cs(
+                              'result',
+                              'notion-page-link',
+                              index === activeResultIndex && 'search-result--selected',
+                            )}
                             href={mapPageUrl(result.page.id, searchResult.recordMap)}
                             onClick={onClose}
+                            onMouseEnter={() => this.setState({ activeResultIndex: index })}
+                            onFocus={() => this.setState({ activeResultIndex: index })}
                             style={{ '--result-order': Math.min(index, 5) } as React.CSSProperties}
                           >
+                            <span className="search-result-icon" aria-hidden="true">
+                              <PageIcon block={result.page} defaultIcon={defaultPageIcon} />
+                            </span>
                             <div className="search-result-main">
-                              <PageTitle block={result.page} defaultIcon={defaultPageIcon} />
+                              <span className="search-result-title">{result.title}</span>
                               {result.highlight?.text && (
                                 <div className="notion-search-result-highlight">
                                   {result.highlight.text}
                                 </div>
                               )}
                             </div>
-                            <svg
-                              className="search-result-arrow"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.6"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              aria-hidden="true"
-                            >
-                              <path d="M5 12h14m-5-5 5 5-5 5" />
-                            </svg>
+                            <span className="search-result-enter" aria-hidden="true">
+                              ↵
+                            </span>
                           </components.PageLink>
                         ))}
                       </div>
                     </NotionContextProvider>
                   ) : (
                     <div className="search-state" role="status">
-                      <span className="search-state-icon" aria-hidden="true">
-                        <SearchIcon />
-                      </span>
                       <p className="noResults">검색 결과가 없습니다.</p>
                     </div>
                   )}
                 </div>
-
-                {hasQuery && !isLoading && searchResult?.results.length > 0 && (
-                  <footer className="resultsFooter">
-                    <span>
-                      <strong>{searchResult.total}</strong>개 결과
-                    </span>
-                    <span className="search-footer-hint">
-                      <kbd>Esc</kbd> 닫기
-                    </span>
-                  </footer>
-                )}
               </div>
             </components.Modal>
           );
@@ -246,14 +236,46 @@ export class SearchDialog extends React.Component<{
     if (!this._mounted) return;
     this._requestId++;
     this._search?.cancel();
-    this.setState({ query: '', isLoading: false, searchResult: null, searchError: null });
+    this.setState({
+      query: '',
+      isLoading: false,
+      searchResult: null,
+      searchError: null,
+      activeResultIndex: 0,
+    });
+  };
+
+  _onInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+
+    const results = this._resultsRef.current?.querySelectorAll<HTMLAnchorElement>('.result');
+    if (!results?.length || this.state.isLoading) return;
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const direction = event.key === 'ArrowDown' ? 1 : -1;
+      const activeResultIndex =
+        (this.state.activeResultIndex + direction + results.length) % results.length;
+      this.setState({ activeResultIndex }, () => {
+        results[activeResultIndex]?.scrollIntoView({ block: 'nearest' });
+      });
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      results[this.state.activeResultIndex]?.click();
+    }
   };
 
   _onChangeQuery = e => {
     const query = e.target.value;
     const requestId = ++this._requestId;
     this.setState(
-      { query, isLoading: !!query.trim(), searchResult: null, searchError: null },
+      {
+        query,
+        isLoading: !!query.trim(),
+        searchResult: null,
+        searchError: null,
+        activeResultIndex: 0,
+      },
       () => {
         if (!this.props.isOpen || this._requestId !== requestId) return;
         if (query.trim()) this._search(query);
