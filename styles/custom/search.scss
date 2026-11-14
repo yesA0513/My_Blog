@@ -26,17 +26,17 @@ body.blog-search-open {
   --search-line: color-mix(in srgb, var(--fg-color) 12%, transparent);
   --search-selection: rgba(30, 40, 55, 0.08);
   top: 0;
-  width: min(100%, 680px);
-  max-width: 680px;
+  width: min(100%, 560px);
+  max-width: 560px;
   max-height: calc(100dvh - 160px);
   min-height: 0;
   border: 1px solid var(--search-edge);
-  border-radius: 28px;
+  border-radius: 32px;
   box-sizing: border-box;
   background: var(--search-surface);
   color: var(--fg-color);
   caret-color: var(--fg-color);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(0, 0, 0, 0.06),
+  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.14), 0 3px 12px rgba(0, 0, 0, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   opacity: 0;
   transform: translateY(10px) scale(0.98);
@@ -65,15 +65,15 @@ body.blog-search-open {
     display: flex;
     align-items: center;
     flex-shrink: 0;
-    gap: 12px;
-    padding: 18px 24px;
+    gap: 8px;
+    padding: 10px 20px;
 
     &::after {
       content: '';
       position: absolute;
-      right: 24px;
+      right: 20px;
       bottom: 0;
-      left: 24px;
+      left: 20px;
       height: 1px;
       background: var(--search-line);
       opacity: 0;
@@ -114,21 +114,21 @@ body.blog-search-open {
   }
 
   .search-close {
-    width: 32px;
-    height: 36px;
+    width: 28px;
+    height: 32px;
     padding: 0;
     border-radius: 50%;
 
     svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
     }
   }
 
   .searchBar {
-    gap: 16px;
+    gap: 12px;
     height: auto;
-    min-height: 44px;
+    min-height: 38px;
     flex: 1;
     min-width: 0;
     margin: 0;
@@ -137,7 +137,7 @@ body.blog-search-open {
     border-radius: 0;
     box-shadow: none;
     background: transparent;
-    font-size: 24px;
+    font-size: 20px;
     line-height: 1.5;
     flex-shrink: 0;
   }
@@ -149,7 +149,7 @@ body.blog-search-open {
     background: transparent;
     color: var(--fg-color);
     font-family: inherit;
-    font-weight: 450;
+    font-weight: 400;
 
     &::placeholder {
       color: var(--search-muted);
@@ -165,8 +165,8 @@ body.blog-search-open {
     fill: currentColor;
 
     svg {
-      width: 25px;
-      height: 25px;
+      width: 22px;
+      height: 22px;
     }
   }
 
@@ -203,14 +203,14 @@ body.blog-search-open {
   }
 
   .search-body--active {
-    max-height: min(480px, 60dvh);
+    max-height: min(400px, 55dvh);
     opacity: 1;
   }
 
   .resultsPane {
     height: auto;
     overflow: visible;
-    padding: 10px 12px 12px;
+    padding: 8px;
     gap: 2px;
   }
 
@@ -219,15 +219,15 @@ body.blog-search-open {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 14px;
-    min-height: 68px;
+    gap: 12px;
+    min-height: 56px;
     min-width: 0;
     flex-shrink: 0;
     box-sizing: border-box;
     margin: 0;
-    padding: 10px 14px;
+    padding: 7px 12px;
     border: 0;
-    border-radius: 16px;
+    border-radius: 20px;
     background: var(--result-background);
     box-shadow: none;
     animation: search-result-enter 240ms ease both;
@@ -254,10 +254,10 @@ body.blog-search-open {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      margin: 2px 0 0;
+      margin: 1px 0 0;
       color: var(--search-muted);
-      font-size: 14px;
-      line-height: 1.5;
+      font-size: 13px;
+      line-height: 1.4;
     }
   }
 
@@ -265,27 +265,27 @@ body.blog-search-open {
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    width: 34px;
-    height: 36px;
+    width: 28px;
+    height: 30px;
 
     .notion-page-icon-inline {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 32px;
-      height: 32px;
+      width: 26px;
+      height: 26px;
       margin: 0;
     }
 
     .notion-page-icon {
-      width: 30px;
-      height: 30px;
+      width: 24px;
+      height: 24px;
       max-width: 100%;
       max-height: 100%;
       border-radius: 6px;
       object-fit: contain;
-      font-size: 28px;
-      line-height: 32px;
+      font-size: 24px;
+      line-height: 26px;
     }
   }
 
@@ -299,15 +299,15 @@ body.blog-search-open {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 17px;
-    line-height: 1.5;
-    font-weight: 550;
+    font-size: 15px;
+    line-height: 1.4;
+    font-weight: 500;
   }
 
   .search-result-enter {
     flex-shrink: 0;
     color: var(--search-muted);
-    font-size: 20px;
+    font-size: 18px;
     opacity: 0;
     transition: opacity 140ms ease;
   }
@@ -418,133 +418,13 @@ body.blog-search-open {
   }
 }
 
-@media (min-width: 601px) {
-  .notion-search {
-    width: min(100%, 560px);
-    max-width: 560px;
-    border-radius: 32px;
-    box-shadow: 0 16px 56px rgba(0, 0, 0, 0.14), 0 3px 12px rgba(0, 0, 0, 0.04),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-
-    .search-toolbar {
-      gap: 8px;
-      padding: 10px 20px;
-
-      &::after {
-        right: 20px;
-        left: 20px;
-      }
-    }
-    .searchBar {
-      min-height: 38px;
-      gap: 12px;
-      font-size: 20px;
-    }
-    .searchInput {
-      font-weight: 400;
-    }
-    .inlineIcon svg {
-      width: 22px;
-      height: 22px;
-    }
-    .search-close {
-      width: 28px;
-      height: 32px;
-
-      svg {
-        width: 16px;
-        height: 16px;
-      }
-    }
-    .search-body--active {
-      max-height: min(400px, 55dvh);
-    }
-    .resultsPane {
-      padding: 8px;
-    }
-    .resultsPane .result {
-      min-height: 56px;
-      gap: 12px;
-      padding: 7px 12px;
-      border-radius: 20px;
-    }
-    .search-result-icon {
-      width: 28px;
-      height: 30px;
-
-      .notion-page-icon-inline {
-        width: 26px;
-        height: 26px;
-      }
-      .notion-page-icon {
-        width: 24px;
-        height: 24px;
-        font-size: 24px;
-        line-height: 26px;
-      }
-    }
-    .search-result-title {
-      font-size: 15px;
-      font-weight: 500;
-      line-height: 1.4;
-    }
-    .resultsPane .result .notion-search-result-highlight {
-      margin-top: 1px;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-    .search-result-enter {
-      font-size: 18px;
-    }
-  }
-}
-
 @media (max-width: 600px) {
   .notion-search-overlay {
     padding: clamp(20px, 10dvh, 64px) 12px 20px;
   }
 
   .notion-search {
-    border-radius: 24px;
     max-height: calc(100dvh - 84px);
-
-    .search-toolbar {
-      padding: 14px 18px;
-      gap: 6px;
-
-      &::after {
-        right: 18px;
-        left: 18px;
-      }
-    }
-    .searchBar {
-      gap: 12px;
-      font-size: 20px;
-    }
-    .inlineIcon svg {
-      width: 22px;
-      height: 22px;
-    }
-    .search-input-actions {
-      gap: 6px;
-    }
-    .resultsPane {
-      padding: 8px;
-    }
-    .resultsPane .result {
-      gap: 12px;
-      padding: 10px;
-      border-radius: 14px;
-    }
-    .search-result-title {
-      font-size: 16px;
-    }
-    .resultsPane .result .notion-search-result-highlight {
-      font-size: 13px;
-    }
-    .search-result-enter {
-      display: none;
-    }
   }
 }
 
